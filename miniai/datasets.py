@@ -9,7 +9,7 @@ import fastcore.all as fc
 
 from torch.utils.data import default_collate
 
-from .training import *
+#from miniai.training import *
 
 # %% auto 0
 __all__ = ['inplace', 'collate_dict', 'show_image', 'subplots', 'get_grid', 'show_images', 'DataLoaders']

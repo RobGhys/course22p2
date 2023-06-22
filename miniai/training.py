@@ -10,6 +10,9 @@ from torch import tensor,nn
 import torch.nn.functional as F
 
 # %% ../nbs/04_minibatch_training.ipynb 36
+# We check if 'out.argmax(dim=1)==yb', so if the highest probability matches the real class
+# We have to take it into float for numerical precision
+# We get the mean
 def accuracy(out, yb): return (out.argmax(dim=1)==yb).float().mean()
 
 # %% ../nbs/04_minibatch_training.ipynb 39
@@ -17,14 +20,18 @@ def report(loss, preds, yb): print(f'{loss:.2f}, {accuracy(preds, yb):.2f}')
 
 # %% ../nbs/04_minibatch_training.ipynb 89
 class Dataset():
-    def __init__(self, x, y): self.x,self.y = x,y
-    def __len__(self): return len(self.x)
-    def __getitem__(self, i): return self.x[i],self.y[i]
+    def __init__(self, x, y): 
+        self.x,self.y = x,y
+    def __len__(self): 
+        return len(self.x)
+    # Returns a tuple of the (x, y) values
+    def __getitem__(self, i): 
+        return self.x[i],self.y[i]
 
-# %% ../nbs/04_minibatch_training.ipynb 133
+# %% ../nbs/04_minibatch_training.ipynb 134
 from torch.utils.data import DataLoader, SequentialSampler, RandomSampler, BatchSampler
 
-# %% ../nbs/04_minibatch_training.ipynb 149
+# %% ../nbs/04_minibatch_training.ipynb 150
 def fit(epochs, model, loss_func, opt, train_dl, valid_dl):
     for epoch in range(epochs):
         model.train()
@@ -46,7 +53,7 @@ def fit(epochs, model, loss_func, opt, train_dl, valid_dl):
         print(epoch, tot_loss/count, tot_acc/count)
     return tot_loss/count, tot_acc/count
 
-# %% ../nbs/04_minibatch_training.ipynb 150
+# %% ../nbs/04_minibatch_training.ipynb 151
 def get_dls(train_ds, valid_ds, bs, **kwargs):
     return (DataLoader(train_ds, batch_size=bs, shuffle=True, **kwargs),
             DataLoader(valid_ds, batch_size=bs*2, **kwargs))
