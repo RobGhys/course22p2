@@ -58,7 +58,7 @@ def clean_mem():
     gc.collect()
     torch.cuda.empty_cache()
 
-# %% ../nbs/11_initializing.ipynb 81
+# %% ../nbs/11_initializing.ipynb 88
 class BatchTransformCB(Callback):
     def __init__(self, tfm, on_train=True, on_val=True): fc.store_attr()
 
@@ -66,7 +66,7 @@ class BatchTransformCB(Callback):
         if (self.on_train and learn.training) or (self.on_val and not learn.training):
             learn.batch = self.tfm(learn.batch)
 
-# %% ../nbs/11_initializing.ipynb 89
+# %% ../nbs/11_initializing.ipynb 96
 class GeneralRelu(nn.Module):
     def __init__(self, leak=None, sub=None, maxv=None):
         super().__init__()
@@ -78,7 +78,7 @@ class GeneralRelu(nn.Module):
         if self.maxv is not None: x.clamp_max_(self.maxv)
         return x
 
-# %% ../nbs/11_initializing.ipynb 90
+# %% ../nbs/11_initializing.ipynb 97
 def plot_func(f, start=-5., end=5., steps=100):
     x = torch.linspace(start, end, steps)
     plt.plot(x, f(x))
@@ -86,11 +86,12 @@ def plot_func(f, start=-5., end=5., steps=100):
     plt.axhline(y=0, color='k', linewidth=0.7)
     plt.axvline(x=0, color='k', linewidth=0.7)
 
-# %% ../nbs/11_initializing.ipynb 94
+# %% ../nbs/11_initializing.ipynb 101
 def init_weights(m, leaky=0.):
+    # PyTorch's kaiming_normal_ takes 'a' as argument, for how leaky your ReLU is
     if isinstance(m, (nn.Conv1d,nn.Conv2d,nn.Conv3d)): init.kaiming_normal_(m.weight, a=leaky)
 
-# %% ../nbs/11_initializing.ipynb 103
+# %% ../nbs/11_initializing.ipynb 110
 def _lsuv_stats(hook, mod, inp, outp):
     acts = to_cpu(outp)
     hook.mean = acts.mean()
@@ -99,12 +100,13 @@ def _lsuv_stats(hook, mod, inp, outp):
 def lsuv_init(model, m, m_in, xb):
     h = Hook(m, _lsuv_stats)
     with torch.no_grad():
+        # Run the model, and observe std (!= 1) and mean (!= 0)
         while model(xb) is not None and (abs(h.std-1)>1e-3 or abs(h.mean)>1e-3):
             m_in.bias -= h.mean
             m_in.weight.data /= h.std
     h.remove()
 
-# %% ../nbs/11_initializing.ipynb 114
+# %% ../nbs/11_initializing.ipynb 122
 def conv(ni, nf, ks=3, stride=2, act=nn.ReLU, norm=None, bias=None):
     if bias is None: bias = not isinstance(norm, (nn.BatchNorm1d,nn.BatchNorm2d,nn.BatchNorm3d))
     layers = [nn.Conv2d(ni, nf, stride=stride, kernel_size=ks, padding=ks//2, bias=bias)]
@@ -112,7 +114,7 @@ def conv(ni, nf, ks=3, stride=2, act=nn.ReLU, norm=None, bias=None):
     if act: layers.append(act())
     return nn.Sequential(*layers)
 
-# %% ../nbs/11_initializing.ipynb 115
+# %% ../nbs/11_initializing.ipynb 123
 def get_model(act=nn.ReLU, nfs=None, norm=None):
     if nfs is None: nfs = [1,8,16,32,64]
     layers = [conv(nfs[i], nfs[i+1], act=act, norm=norm) for i in range(len(nfs)-1)]
