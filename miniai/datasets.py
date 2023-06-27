@@ -9,7 +9,9 @@ import fastcore.all as fc
 
 from torch.utils.data import default_collate
 
-#from miniai.training import *
+from .training import *
+
+from utils import *
 
 # %% auto 0
 __all__ = ['inplace', 'collate_dict', 'show_image', 'subplots', 'get_grid', 'show_images', 'DataLoaders']
@@ -19,6 +21,7 @@ def inplace(f):
     def _f(b):
         f(b)
         return b
+    # Returns a function
     return _f
 
 # %% ../nbs/05_datasets.ipynb 33
@@ -37,6 +40,7 @@ def show_image(im, ax=None, figsize=None, title=None, noframe=True, **kwargs):
     elif not isinstance(im,np.ndarray): im=np.array(im)
     if im.shape[-1]==1: im=im[...,0]
     if ax is None: _,ax = plt.subplots(figsize=figsize)
+    # ** : pass the dictionnary kwargs, as separate arguments
     ax.imshow(im, **kwargs)
     if title is not None: ax.set_title(title)
     ax.set_xticks([]) 

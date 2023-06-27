@@ -121,12 +121,15 @@ class ProgressCB(Callback):
 
 # %% ../nbs/09_learner.ipynb 48
 class with_cbs:
+    # nm: the name of the call back
     def __init__(self, nm): self.nm = nm
     def __call__(self, f):
         def _f(o, *args, **kwargs):
             try:
+                # Call the special method before calling the actual method
                 o.callback(f'before_{self.nm}')
                 f(o, *args, **kwargs)
+                # call this method after the actual method
                 o.callback(f'after_{self.nm}')
             except globals()[f'Cancel{self.nm.title()}Exception']: pass
             finally: o.callback(f'cleanup_{self.nm}')
@@ -220,11 +223,13 @@ class LRFinderCB(Callback):
 
     def after_batch(self, learn):
         if not learn.training: raise CancelEpochException()
+        # Grab learning rate
         self.lrs.append(learn.opt.param_groups[0]['lr'])
         loss = to_cpu(learn.loss)
         self.losses.append(loss)
         if loss < self.min: self.min = loss
         if math.isnan(loss) or (loss > self.min*self.max_mult):
+            # Stop training
             raise CancelFitException()
         self.sched.step()
 
